@@ -1,74 +1,59 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-const initialState = {
-	isAuthenticated: false,
-	user: null,
-	loading: false,
-	error: null,
-	data: {},
-	status: "idle",
-	userInfo: {
-		email: "",
-		name: "",
-		id: null,
-		role: "",
-	},
+import {
+  login as loginAPI,
+  LoginError,
+  logout as logoutAPI,
+  AuthState,
+  LoginCredentials,
+  User,
+} from '../../core';
+
+const initialState: AuthState = {
+  isAuthenticated: false,
+  user: null,
+  loading: false,
+  error: null,
 };
 
-const authSlice = createSlice({
-	name: "authentication",
-	initialState: initialState,
-	reducers: {
-		loginStart(state) {
-			state.loading = true;
-			state.error = null;
-			state.status = "loading";
-			state.data = {};
-		},
-		loginSuccess(state, { payload }) {
-			state.isAuthenticated = true;
-			state.user = payload;
-			state.loading = false;
-			state.error = null;
-			state.status = "succeeded";
-			state.data = payload;
-			state.userInfo = {
-				...state.userInfo,
-				...payload,
-			};
-		},
-		loginFailure(state, { payload }) {
-			state.loading = false;
-			state.error = payload;
-			state.status = "failed";
-			state.data = {};
-			state.user = null;
-		},
-		logout(state) {
-			return initialState;
-		},
-		updateUserInfo(state, { payload }) {
-			state.userInfo = {
-				...state.userInfo,
-				...payload,
-			};
-			state.user = {
-				...state.user,
-				...payload,
-			};
-			state.data = {
-				...state.data,
-				...payload,
-			};
-		},
-	},
+export const loginUser = createAsyncThunk(
+  'auth/loginUser',
+  async ({ email, password }: LoginCredentials, { rejectWithValue }) => {
+    try {
+      return await loginAPI(email, password);
+    } catch (error) {
+      if (error instanceof LoginError) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue('Login failed');
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
+  await logoutAPI();
 });
 
-export const {
-	loginStart,
-	loginSuccess,
-	loginFailure,
-	logout,
-	updateUserInfo,
-} = authSlice.actions;
+const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(loginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginUser.fulfilled, (state, action: PayloadAction<User>) => {
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.loading = false;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(logoutUser.fulfilled, () => initialState);
+  },
+});
 export default authSlice.reducer;
