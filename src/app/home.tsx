@@ -62,7 +62,7 @@ export default function HomePage() {
           <BarChartComponent color={'#FFBB28'} data={lifeSpanData} />
         </ChartCard>
       </div>
-      <div className="grid grid-cols-4 gap-4 mt-10">
+      <div className="grid grid-cols-4 xs:grid-cols-1 gap-4 mt-10">
         {cats.map((cat) => (
           <Card key={cat.name} {...cat} />
         ))}

@@ -9,6 +9,7 @@ export function CatFilters({
 }) {
   return (
     <div className="flex flex-wrap gap-4 items-center mb-6">
+      <label>Origin</label>
       <select
         name="Origin"
         value={filter.origin}
@@ -22,6 +23,7 @@ export function CatFilters({
         ))}
       </select>
 
+      <label>Indoor Preference</label>
       <select
         name="Indoor preference"
         value={filter.indoor}
